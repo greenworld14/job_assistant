@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profile & Settings · Job Apply Assistant</title>
+  <link rel="stylesheet" href="ui.css">
+  <style>
+    .page { max-width: 920px; margin: 0 auto; padding: 24px 16px 96px; display: flex; flex-direction: column; gap: 16px; }
+    .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .top .brand { display: flex; align-items: center; gap: 10px; }
+    .top img { width: 32px; height: 32px; }
+    nav { display: flex; gap: 6px; flex-wrap: wrap; }
+    .card h2 { margin-bottom: 4px; }
+    .card > p.muted { margin: 0 0 12px; font-size: 13px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+    .grid .wide { grid-column: 1 / -1; }
+    .drop { border: 2px dashed var(--border-strong); border-radius: 12px; padding: 26px 16px; text-align: center; cursor: pointer; transition: background .15s, border-color .15s; }
+    .drop:hover, .drop.over { background: var(--accent-soft); border-color: var(--accent); }
+    .drop strong { display: block; font-size: 15px; margin-bottom: 4px; }
+    .filebox { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); flex-wrap: wrap; }
+    .filebox .name { font-weight: 600; word-break: break-all; }
+    .entry { border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 10px; background: var(--surface-2); }
+    .entry-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: 600; font-size: 13px; }
+    .section-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .savebar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--border); padding: 10px 16px; display: flex; justify-content: center; }
+    .savebar-inner { width: 100%; max-width: 920px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .check { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    details summary { cursor: pointer; font-size: 13px; color: var(--muted); }
+    pre.raw { white-space: pre-wrap; font-size: 12px; max-height: 260px; overflow: auto; background: var(--surface-2); padding: 10px; border-radius: 8px; }
+    #parseStatus { margin-top: 12px; }
+    .value-box { display: flex; flex-direction: column; gap: 4px; }
+    .value-box > span { font-size: 12px; font-weight: 600; color: var(--muted); }
+    .entry-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+    .entry-foot .err-msg { color: var(--bad); font-weight: 600; margin-right: auto; }
+    .entry.answer.dirty { border-color: var(--warn); }
+    .entry.answer.incomplete .value-box { outline: 1px dashed var(--warn); outline-offset: 4px; border-radius: 6px; }
+    .yn { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 999px; overflow: hidden; width: max-content; }
+    .yn button { border: 0; background: var(--surface); color: var(--text); padding: 6px 18px; font: inherit; font-weight: 600; font-size: 13px; cursor: pointer; }
+    .yn button + button { border-left: 1px solid var(--border-strong); }
+    .yn button[aria-pressed="true"].y { background: var(--good); color: #fff; }
+    .yn button[aria-pressed="true"].n { background: #475569; color: #fff; }
+    .count { font-size: 11.5px; color: var(--muted); text-align: right; }
+    code { font-size: 12px; background: var(--surface-2); padding: 1px 4px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="top">
+      <div class="brand"><img src="icons/icon48.png" alt=""><div><h1>Job Apply Assistant</h1><div class="muted small">Profile, resume & settings — stored only in this browser</div></div></div>
+      <nav>
+        <a class="btn" href="tracker.html">📋 Tracker</a>
+        <a class="btn ghost" href="#settings">Settings</a>
+      </nav>
+    </div>
+
+    <section class="card">
+      <h2>1. Upload your resume</h2>
+      <p class="muted">PDF or DOCX. It's parsed locally in your browser — nothing is uploaded anywhere. The original file is kept for resume-upload fields on application forms.</p>
+      <label class="drop" id="drop">
+        <strong>Drop your resume here or click to choose</strong>
+        <span class="muted small">PDF, DOCX (max 5 MB)</span>
+        <input type="file" id="fileInput" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+      </label>
+      <div id="parseStatus"></div>
+      <div class="filebox hidden" id="fileBox">
+        <div><div class="name" id="fileName"></div><div class="muted small" id="fileMeta"></div></div>
+        <div style="display:flex;gap:6px">
+          <button class="btn sm" id="reparseBtn">Re-extract</button>
+          <button class="btn sm" id="downloadBtn">Download</button>
+          <button class="btn sm danger" id="removeFileBtn">Remove</button>
+        </div>
+      </div>
+      <details id="rawBox" class="hidden" style="margin-top:10px"><summary>Show extracted text</summary><pre class="raw" id="rawText"></pre></details>
+    </section>
+
+    <form id="profileForm" class="card" autocomplete="off">
+      <h2>2. Review your profile</h2>
+      <p class="muted">Check and correct what was extracted. These values are used to fill application forms.</p>
+      <div class="grid">
+        <label class="field">First name<input name="firstName"></label>
+        <label class="field">Last name<input name="lastName"></label>
+        <label class="field">Full name<input name="fullName"></label>
+        <label class="field">Email<input name="email" type="email"></label>
+        <label class="field">Phone<input name="phone" type="tel"></label>
+        <label class="field">Location (City, State)<input name="location" placeholder="San Francisco, CA"></label>
+        <label class="field">Street address<input name="address"></label>
+        <label class="field">City<input name="city"></label>
+        <label class="field">State / Province<input name="state"></label>
+        <label class="field">ZIP / Postal code<input name="zip"></label>
+        <label class="field">Country<input name="country" placeholder="United States"></label>
+        <label class="field">Years of experience<input name="yearsExperience" type="number" min="0" max="60"></label>
+        <label class="field">LinkedIn URL<input name="linkedin" type="url"></label>
+        <label class="field">GitHub URL<input name="github" type="url"></label>
+        <label class="field">Portfolio / Website<input name="portfolio" type="url"></label>
+        <label class="field">Current title<input name="currentTitle"></label>
+        <label class="field">Current company<input name="currentCompany"></label>
+        <label class="field wide">Summary<textarea name="summary" rows="4"></textarea></label>
+        <label class="field wide">Skills (comma-separated)<textarea name="skills" rows="3"></textarea></label>
+      </div>
+    </form>
+
+    <section class="card">
+      <div class="section-head"><h2>Work history</h2><button class="btn sm" id="addWork">+ Add position</button></div>
+      <div id="workList"></div>
+    </section>
+
+    <section class="card">
+      <div class="section-head"><h2>Education</h2><button class="btn sm" id="addEdu">+ Add school</button></div>
+      <div id="eduList"></div>
+    </section>
+
+    <section class="card" id="answers">
+      <div class="section-head">
+        <div>
+          <h2>Saved answers</h2>
+          <p class="muted small" style="margin:2px 0 0">Default answers to screening questions. They're filled in only when a new question clearly matches; anything uncertain is left for you. In text answers, <code>{company}</code> and <code>{title}</code> are replaced with the job's company and title.</p>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn sm" id="addCommon" type="button">+ Common questions</button>
+          <button class="btn sm primary" id="addAnswer" type="button">+ Add answer</button>
+        </div>
+      </div>
+      <input id="answerSearch" placeholder="Search saved answers" style="margin-bottom:10px">
+      <div id="answerList"></div>
+    </section>
+
+    <section class="card" id="ai">
+      <h2>✨ AI assistant (DeepSeek)</h2>
+      <p class="muted">Answers screening questions that have no saved answer, using your profile. Every AI answer is marked for you to verify, and you still submit yourself.</p>
+      <div class="notice warn" style="margin-bottom:12px">When turned on, the question text, its options, the job title/company, your work history, skills, education, location and saved answers are sent to <b>api.deepseek.com</b>. Your email, phone, street address and resume file are never sent. AI never answers salary, consent or voluntary-disclosure questions.</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label class="check"><input type="checkbox" id="setAi"> Turn on the AI assistant</label>
+        <label class="check"><input type="checkbox" id="setAiAuto"> Answer automatically after "Fill application" (otherwise only when I click "Answer with AI")</label>
+      </div>
+      <div class="grid" style="margin-top:12px">
+        <label class="field wide">DeepSeek API key
+          <span style="display:flex;gap:6px">
+            <input id="aiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-…">
+            <button class="btn" id="aiKeyShow" type="button">Show</button>
+          </span>
+        </label>
+        <label class="field">Model
+          <select id="setAiModel">
+            <option value="deepseek-chat">deepseek-chat (fast)</option>
+            <option value="deepseek-reasoner">deepseek-reasoner (slower, more careful)</option>
+          </select>
+        </label>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap">
+        <button class="btn primary" id="aiSaveKey" type="button">Save key</button>
+        <button class="btn" id="aiTest" type="button">Test connection</button>
+        <button class="btn danger" id="aiRemoveKey" type="button">Remove key</button>
+        <span class="small" id="aiStatus"></span>
+      </div>
+    </section>
+
+    <section class="card" id="settings">
+      <h2>Settings</h2>
+      <p class="muted">Autofill behavior and the applied-job counter.</p>
+      <div class="grid">
+        <label class="field">Daily goal (0 = off)<input id="setGoal" type="number" min="0" max="200"></label>
+        <label class="field">Count an application when…
+          <select id="setCountMode">
+            <option value="confirm">The confirmation appears (recommended)</option>
+            <option value="click">I click the Submit button</option>
+          </select>
+        </label>
+        <label class="field">Badge shows
+          <select id="setBadge">
+            <option value="total">Total applied</option>
+            <option value="today">Applied today</option>
+          </select>
+        </label>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+        <label class="check"><input type="checkbox" id="setFloat"> Show the floating "Fill application" button on supported job sites</label>
+        <label class="check"><input type="checkbox" id="setHighlight"> Highlight filled (green) and needs-review (amber) fields</label>
+        <label class="check"><input type="checkbox" id="setOverwrite"> Overwrite fields that already have a value</label>
+        <label class="check"><input type="checkbox" id="setAutoAnswers"> Fill saved answers automatically when a question clearly matches</label>
+        <label class="check"><input type="checkbox" id="setReview"> Show the review screen when I click Submit</label>
+        <label class="check"><input type="checkbox" id="setBlock"> Block Submit while required questions are unanswered or too long</label>
+      </div>
+      <div class="grid" style="margin-top:12px">
+        <label class="field">Answer matching
+          <select id="setThreshold">
+            <option value="0.7">Lenient (70% similar)</option>
+            <option value="0.8">Balanced (80% similar)</option>
+            <option value="0.9">Strict (90% similar)</option>
+          </select>
+        </label>
+      </div>
+      <div class="notice info" style="margin-top:14px">Supported sites: LinkedIn Easy Apply, Indeed, Dice, ZipRecruiter, Greenhouse, Lever, Workday and Ashby. The extension never clicks Submit and never sends your data anywhere.</div>
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn danger" id="clearProfile">Delete profile & resume</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="savebar">
+    <div class="savebar-inner">
+      <span class="muted small" id="saveState">No unsaved changes</span>
+      <button class="btn primary" id="saveBtn">Save profile</button>
+    </div>
+  </div>
+
+  <template id="workTpl">
+    <div class="entry">
+      <div class="entry-head"><span class="idx"></span><button class="btn sm danger rm" type="button">Remove</button></div>
+      <div class="grid">
+        <label class="field">Title<input data-k="title"></label>
+        <label class="field">Company<input data-k="company"></label>
+        <label class="field">Location<input data-k="location"></label>
+        <label class="field">Start<input data-k="startDate" placeholder="Jan 2021"></label>
+        <label class="field">End<input data-k="endDate" placeholder="Present"></label>
+        <label class="field wide">Description<textarea data-k="description" rows="3"></textarea></label>
+      </div>
+    </div>
+  </template>
+
+  <template id="eduTpl">
+    <div class="entry">
+      <div class="entry-head"><span class="idx"></span><button class="btn sm danger rm" type="button">Remove</button></div>
+      <div class="grid">
+        <label class="field">School<input data-k="school"></label>
+        <label class="field">Degree<input data-k="degree"></label>
+        <label class="field">Field of study<input data-k="discipline"></label>
+        <label class="field">Start<input data-k="startDate"></label>
+        <label class="field">End / Graduation<input data-k="endDate"></label>
+        <label class="field">GPA<input data-k="gpa"></label>
+      </div>
+    </div>
+  </template>
+
+  <template id="answerTpl">
+    <div class="entry answer">
+      <div class="grid">
+        <label class="field wide">Question<input data-a="question" placeholder="e.g. Are you legally authorized to work in the United States?"></label>
+        <label class="field">Type
+          <select data-a="type">
+            <option value="yesno">Yes / No</option>
+            <option value="select">Single choice</option>
+            <option value="multi">Multiple choice</option>
+            <option value="text">Free text</option>
+          </select>
+        </label>
+        <div class="field wide value-box"></div>
+      </div>
+      <div class="entry-foot">
+        <span class="muted small meta"></span>
+        <span class="small err-msg"></span>
+        <div style="display:flex;gap:6px">
+          <button class="btn sm danger del" type="button">Delete</button>
+          <button class="btn sm primary save" type="button">Save</button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script src="shared.js"></script>
+  <script src="lib/pdf.min.js"></script>
+  <script src="lib/zip.js"></script>
+  <script src="lib/resume-parser.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

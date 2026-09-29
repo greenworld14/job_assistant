@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Job Apply Assistant</title>
+  <link rel="stylesheet" href="ui.css">
+  <style>
+    body { width: 380px; }
+    header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px 8px; }
+    header .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+    header img { width: 22px; height: 22px; }
+    main { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 12px; }
+    .stat .n { font-size: 20px; }
+    .goal-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+    .page { display: flex; flex-direction: column; gap: 10px; }
+    .page-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .job-title { font-weight: 600; }
+    .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .actions .btn.primary { flex: 1; }
+    .result ul { list-style: none; margin: 8px 0 0; padding: 0; max-height: 160px; overflow: auto; }
+    .result li { padding: 4px 0; border-top: 1px solid var(--border); font-size: 12.5px; }
+    .result li .r { color: var(--muted); font-size: 11.5px; }
+    .result .req { color: var(--bad); font-weight: 700; font-size: 11px; }
+    .sum { display: flex; gap: 12px; font-weight: 600; }
+    .sum .f { color: var(--good); }
+    .sum .w { color: var(--warn); }
+    .last { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12.5px; }
+    .last .txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    footer { display: flex; gap: 8px; padding: 0 14px 14px; }
+    footer .btn { flex: 1; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><img src="icons/icon48.png" alt="">Job Apply Assistant</div>
+    <button class="btn ghost sm" id="openOptions" title="Profile & settings">⚙ Settings</button>
+  </header>
+  <main>
+    <section class="stats">
+      <div class="stat"><div class="n" id="sTotal">0</div><div class="l">Total</div></div>
+      <div class="stat"><div class="n" id="sToday">0</div><div class="l">Today</div></div>
+      <div class="stat"><div class="n" id="sWeek">0</div><div class="l">This week</div></div>
+      <div class="stat"><div class="n" id="sMonth">0</div><div class="l">This month</div></div>
+    </section>
+
+    <section id="goalBox" class="hidden">
+      <div class="goal-row"><span>Daily goal</span><span id="goalText"></span></div>
+      <div class="progress" id="goalBar"><span style="width:0"></span></div>
+    </section>
+
+    <section class="card page">
+      <div class="page-top">
+        <span class="chip" id="siteChip">Checking page…</span>
+        <span class="chip hidden" id="appliedChip"></span>
+      </div>
+      <div id="jobInfo" class="hidden">
+        <div class="job-title" id="jobTitle"></div>
+        <div class="muted small" id="jobCompany"></div>
+      </div>
+      <div id="pageMsg" class="notice info hidden"></div>
+      <div class="actions">
+        <button class="btn primary" id="fillBtn" disabled>⚡ Fill application</button>
+        <button class="btn" id="markBtn" disabled>Mark as applied</button>
+        <button class="btn" id="saveBtn" disabled title="Save for later (not counted)">Save</button>
+      </div>
+      <button class="btn hidden" id="genericBtn">Try generic fill on this page</button>
+      <div class="result hidden" id="result"></div>
+      <div class="muted small">You always submit manually — the extension never clicks Submit.</div>
+    </section>
+
+    <section class="last hidden" id="lastBox">
+      <span class="txt" id="lastText"></span>
+      <button class="btn sm" id="undoBtn">Undo</button>
+    </section>
+  </main>
+  <footer>
+    <button class="btn" id="openTracker">📋 Tracker</button>
+    <button class="btn" id="openProfile">👤 Profile</button>
+  </footer>
+  <script src="shared.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

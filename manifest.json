@@ -1,0 +1,69 @@
+{
+  "manifest_version": 3,
+  "name": "Job Apply Assistant",
+  "version": "1.4.0",
+  "description": "Autofill job applications from your resume, review before you submit, and track how many jobs you've applied to.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://*.greenhouse.io/*",
+    "https://*.lever.co/*",
+    "https://*.ashbyhq.com/*",
+    "https://*.myworkdayjobs.com/*",
+    "https://*.myworkdaysite.com/*",
+    "https://*.linkedin.com/*",
+    "https://*.indeed.com/*",
+    "https://*.dice.com/*",
+    "https://*.ziprecruiter.com/*",
+    "https://*.ziprecruiter.co.uk/*",
+    "https://*.ziprecruiter.ca/*",
+    "https://api.deepseek.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.greenhouse.io/*",
+        "https://*.lever.co/*",
+        "https://*.ashbyhq.com/*",
+        "https://*.myworkdayjobs.com/*",
+        "https://*.myworkdaysite.com/*",
+        "https://*.linkedin.com/*",
+        "https://*.indeed.com/*",
+        "https://*.dice.com/*",
+        "https://*.ziprecruiter.com/*",
+        "https://*.ziprecruiter.co.uk/*",
+        "https://*.ziprecruiter.ca/*"
+      ],
+      "js": [
+        "shared.js",
+        "questions.js",
+        "content.js"
+      ],
+      "all_frames": true,
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "Job Apply Assistant",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_page": "options.html",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
